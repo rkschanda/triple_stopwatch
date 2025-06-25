@@ -1,127 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Triple Stopwatch</title>
   <style>
-    body {
-      background-color: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 20px;
-      padding: 20px;
-      flex-wrap: wrap;
-    }
-
-    .stopwatch {
-      background: #222;
-      border-radius: 10px;
-      padding: 20px;
-      width: 250px;
-      text-align: center;
-      box-shadow: 0 0 10px #000;
-    }
-
-    .title {
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
-
-    .time {
-      font-size: 48px;
-      margin: 20px 0;
-      color: #0ff;
-    }
-
-    button {
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .start { background-color: #4caf50; color: white; }
-    .stop { background-color: #f44336; color: white; }
-    .reset { background-color: #555; color: white; }
-
-    @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-        align-items: center;
-      }
-    }
+    body { background:#111;color:#fff;font-family:Arial; display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:20px; }
+    .stopwatch { background:#222;border-radius:10px;padding:20px;width:250px;text-align:center;box-shadow:0 0 10px #000; }
+    .title { font-size:24px;margin-bottom:10px;cursor:text; }
+    .time { font-size:48px;margin:20px 0;color:#0ff; }
+    button {margin:5px;padding:10px 20px;font-size:16px;border:none;border-radius:5px;cursor:pointer;}
+    .start{background:#4caf50;color:#fff;} .stop{background:#f44336;color:#fff;} .reset{background:#555;color:#fff;}
+    #overall, #wasted {width:100%;text-align:center;margin-top:20px;}
+    #overall .label, #wasted .label {font-size:20px;} #overall .time, #wasted .time{font-size:36px;}
+    @media(max-width:768px){body{flex-direction:column;align-items:center;}}
   </style>
 </head>
 <body>
+
   <div class="stopwatch" id="sw1">
-    <div class="title">Exercise A</div>
+    <div class="title" contenteditable="true">Exercise A</div>
     <div class="time" id="time1">00:00</div>
     <button class="start" onclick="start(1)">Start</button>
-    <button class="stop" onclick="stop(1)">Stop</button>
+    <button class="stop"  onclick="stop(1)">Stop</button>
     <button class="reset" onclick="reset(1)">Reset</button>
   </div>
 
   <div class="stopwatch" id="sw2">
-    <div class="title">Exercise B</div>
+    <div class="title" contenteditable="true">Exercise B</div>
     <div class="time" id="time2">00:00</div>
     <button class="start" onclick="start(2)">Start</button>
-    <button class="stop" onclick="stop(2)">Stop</button>
+    <button class="stop"  onclick="stop(2)">Stop</button>
     <button class="reset" onclick="reset(2)">Reset</button>
   </div>
 
   <div class="stopwatch" id="sw3">
-    <div class="title">Exercise C</div>
+    <div class="title" contenteditable="true">Exercise C</div>
     <div class="time" id="time3">00:00</div>
     <button class="start" onclick="start(3)">Start</button>
-    <button class="stop" onclick="stop(3)">Stop</button>
+    <button class="stop"  onclick="stop(3)">Stop</button>
     <button class="reset" onclick="reset(3)">Reset</button>
   </div>
 
-  <script>
-    window.onload = function() {
-      let timers = [
-        { interval: null, seconds: 0 },
-        { interval: null, seconds: 0 },
-        { interval: null, seconds: 0 }
-      ];
+  <!-- Overall timer -->
+  <div id="overall">
+    <div class="label">Overall Workout Time</div>
+    <div class="time" id="overallTime">00:00</div>
+  </div>
 
-      function formatTime(sec) {
-        let m = Math.floor(sec / 60).toString().padStart(2, '0');
-        let s = (sec % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
+  <!-- Wasted time counter -->
+  <div id="wasted">
+    <div class="label">Wasted Time</div>
+    <div class="time" id="wastedTime">00:00</div>
+  </div>
+
+<script>
+window.onload = () => {
+  const timers = [
+    {interval:null, seconds:0, el:document.getElementById("time1")},
+    {interval:null, seconds:0, el:document.getElementById("time2")},
+    {interval:null, seconds:0, el:document.getElementById("time3")}
+  ];
+  let overallInterval = null, overallSeconds = 0;
+  let wastedInterval = null, wastedSeconds = 0;
+
+  const format = s => String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
+
+  const update = i => {
+    const t = timers[i];
+    t.el.textContent = format(t.seconds);
+    // red if over 3min
+    t.el.style.color = t.seconds > 180 ? "red" : "#0ff";
+  };
+
+  const checkWasted = () => {
+    if (timers.some(t => t.seconds > 180)) {
+      if (!wastedInterval) {
+        wastedInterval = setInterval(() => {
+          wastedSeconds++;
+          document.getElementById("wastedTime").textContent = format(wastedSeconds);
+        }, 1000);
       }
+    } else {
+      clearInterval(wastedInterval);
+      wastedInterval = null;
+    }
+  };
 
-      function updateDisplay(index) {
-        document.getElementById(`time${index}`).textContent = formatTime(timers[index - 1].seconds);
+  window.start = i => {
+    const idx = i - 1;
+    if (!timers[idx].interval) {
+      timers[idx].interval = setInterval(() => {
+        timers[idx].seconds++;
+        update(idx);
+        checkWasted();
+      }, 1000);
+      // start overall if first
+      if (!overallInterval) {
+        overallInterval = setInterval(() => {
+          overallSeconds++;
+          document.getElementById("overallTime").textContent = format(overallSeconds);
+        }, 1000);
       }
+    }
+  };
 
-      window.start = function(index) {
-        if (!timers[index - 1].interval) {
-          timers[index - 1].interval = setInterval(() => {
-            timers[index - 1].seconds++;
-            updateDisplay(index);
-          }, 1000);
-        }
-      };
+  window.stop = i => {
+    const idx = i - 1;
+    clearInterval(timers[idx].interval);
+    timers[idx].interval = null;
+    checkWasted();
+  };
 
-      window.stop = function(index) {
-        clearInterval(timers[index - 1].interval);
-        timers[index - 1].interval = null;
-      };
+  window.reset = i => {
+    const idx = i - 1;
+    window.stop(i);
+    timers[idx].seconds = 0; update(idx); checkWasted();
+  };
+};
+</script>
 
-      window.reset = function(index) {
-        window.stop(index);
-        timers[index - 1].seconds = 0;
-        updateDisplay(index);
-      };
-    };
-  </script>
 </body>
 </html>
