@@ -10,11 +10,12 @@
     .time { font-size:48px;margin:20px 0;color:#0ff; }
     button {margin:5px;padding:10px 20px;font-size:16px;border:none;border-radius:5px;cursor:pointer;}
     .start{background:#4caf50;color:#fff;} .stop{background:#f44336;color:#fff;} .reset{background:#555;color:#fff;}
-    #overall, #wasted, #controls, #version {width:100%;text-align:center;margin-top:20px;}
-    #overall .label, #wasted .label {font-size:20px;}
-    #overall .time, #wasted .time {font-size:36px;}
+    #overall, #wasted, #controls, #version, #countdown, #motivation {width:100%;text-align:center;margin-top:20px;}
+    #overall .label, #wasted .label, #countdown .label {font-size:20px;}
+    #overall .time, #wasted .time, #countdown .time {font-size:36px;}
     #startTimeLabel { font-size:18px; color:#aaa; margin-bottom:5px; }
     #version { font-size:12px; color:#888; margin-top:40px; }
+    #motivation img { max-width:100%; height:auto; border-radius:10px; box-shadow:0 0 10px #000; margin-top:10px; }
     @media(max-width:768px){body{flex-direction:column;align-items:center;}}
   </style>
 </head>
@@ -45,7 +46,13 @@
     <div class="time" id="wastedTime">00:00</div>
   </div>  <div id="controls">
     <button onclick="startNewSession()" style="background:#ff9800;color:white;">Start New Session</button>
-  </div>  <div id="version">v2.1 - Persistent timestamps + real-time recovery</div><script>
+  </div>  <div id="version">v2.2 - Countdown + motivational image + persistence</div>  <div id="countdown">
+    <div class="label">Countdown to July 19</div>
+    <div class="time" id="countdownTimer">Loading...</div>
+  </div>  <div id="motivation">
+    <div class="label">Stay motivated</div>
+    <img id="motivationImg" src="" alt="Motivational Image">
+  </div><script>
 let timers = [
   { running: false, start: null, elapsed: 0, label: "Exercise A" },
   { running: false, start: null, elapsed: 0, label: "Exercise B" },
@@ -142,7 +149,31 @@ function startNewSession() {
   document.getElementById("label3").innerText = "Exercise C";
 }
 
+function updateCountdown() {
+  const target = new Date("July 19, 2025 00:00:00").getTime();
+  const now = new Date().getTime();
+  const diff = target - now;
+  const days = Math.floor(diff / (1000*60*60*24));
+  const hrs = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+  const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
+  const secs = Math.floor((diff % (1000*60)) / 1000);
+  document.getElementById("countdownTimer").textContent = `${days}d ${hrs}h ${mins}m ${secs}s`;
+}
+
+function rotateMotivationImage() {
+  const images = [
+    "https://i.imgur.com/1ZQZ1Zm.jpg",
+    "https://i.imgur.com/h6eV6yD.jpg",
+    "https://i.imgur.com/Zc1zqPQ.jpg"
+  ];
+  const idx = Math.floor(Math.random() * images.length);
+  document.getElementById("motivationImg").src = images[idx];
+}
+
 loadState();
 updateDisplay();
+setInterval(updateCountdown, 1000);
+rotateMotivationImage();
+setInterval(rotateMotivationImage, 5 * 60 * 1000);
 </script></body>
 </html>
