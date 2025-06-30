@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,195 +10,115 @@
     .time { font-size:48px;margin:20px 0;color:#0ff; }
     button {margin:5px;padding:10px 20px;font-size:16px;border:none;border-radius:5px;cursor:pointer;}
     .start{background:#4caf50;color:#fff;} .stop{background:#f44336;color:#fff;} .reset{background:#555;color:#fff;}
-    #overall, #wasted {width:100%;text-align:center;margin-top:20px;}
-    #overall .label, #wasted .label {font-size:20px;} 
+    #overall, #wasted, #controls, #version {width:100%;text-align:center;margin-top:20px;}
+    #overall .label, #wasted .label {font-size:20px;}
     #overall .time, #wasted .time {font-size:36px;}
     #startTimeLabel { font-size:18px; color:#aaa; margin-bottom:5px; }
-    #controls {width:100%;text-align:center;margin-top:20px;}
+    #version { font-size:12px; color:#888; margin-top:40px; }
     @media(max-width:768px){body{flex-direction:column;align-items:center;}}
   </style>
 </head>
-<body>
-
-  <div class="stopwatch" id="sw1">
+<body>  <div class="stopwatch" id="sw1">
     <div class="title" contenteditable="true" id="label1">Exercise A</div>
     <div class="time" id="time1">00:00</div>
     <button class="start" onclick="start(1)">Start</button>
     <button class="stop"  onclick="stop(1)">Stop</button>
     <button class="reset" onclick="reset(1)">Reset</button>
-  </div>
-
-  <div class="stopwatch" id="sw2">
+  </div>  <div class="stopwatch" id="sw2">
     <div class="title" contenteditable="true" id="label2">Exercise B</div>
     <div class="time" id="time2">00:00</div>
     <button class="start" onclick="start(2)">Start</button>
     <button class="stop"  onclick="stop(2)">Stop</button>
     <button class="reset" onclick="reset(2)">Reset</button>
-  </div>
-
-  <div class="stopwatch" id="sw3">
+  </div>  <div class="stopwatch" id="sw3">
     <div class="title" contenteditable="true" id="label3">Exercise C</div>
     <div class="time" id="time3">00:00</div>
     <button class="start" onclick="start(3)">Start</button>
     <button class="stop"  onclick="stop(3)">Stop</button>
     <button class="reset" onclick="reset(3)">Reset</button>
-  </div>
-
-  <!-- Overall timer -->
-  <div id="overall">
+  </div>  <div id="overall">
     <div class="label" id="startTimeLabel"></div>
     <div class="label">Overall Workout Time</div>
     <div class="time" id="overallTime">00:00</div>
-  </div>
-
-  <!-- Wasted time counter -->
-  <div id="wasted">
+  </div>  <div id="wasted">
     <div class="label">Wasted Time</div>
     <div class="time" id="wastedTime">00:00</div>
-  </div>
-
-  <!-- Reset button -->
-  <div id="controls">
+  </div>  <div id="controls">
     <button onclick="startNewSession()" style="background:#ff9800;color:white;">Start New Session</button>
-  </div>
+  </div>  <div id="version">v2.0 - Real-time calculation with timestamp recovery</div><script>
+let timers = [
+  { running: false, start: null, elapsed: 0 },
+  { running: false, start: null, elapsed: 0 },
+  { running: false, start: null, elapsed: 0 }
+];
+let overall = { running: false, start: null, elapsed: 0 };
+let wasted = { running: false, start: null, elapsed: 0 };
 
-<script>
-window.onload = () => {
-  const timers = [
-    {interval:null, seconds:0, el:document.getElementById("time1"), label:document.getElementById("label1")},
-    {interval:null, seconds:0, el:document.getElementById("time2"), label:document.getElementById("label2")},
-    {interval:null, seconds:0, el:document.getElementById("time3"), label:document.getElementById("label3")}
-  ];
-  let overallInterval = null, overallSeconds = 0;
-  let wastedInterval = null, wastedSeconds = 0;
+function formatTime(ms) {
+  const s = Math.floor(ms / 1000);
+  return String(Math.floor(s/60)).padStart(2,'0') + ":" + String(s%60).padStart(2,'0');
+}
 
-  const format = s => String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
+function updateDisplay() {
+  timers.forEach((t, i) => {
+    const el = document.getElementById(`time${i+1}`);
+    const time = t.elapsed + (t.running ? Date.now() - t.start : 0);
+    el.textContent = formatTime(time);
+    el.style.color = (time >= 180000) ? 'red' : '#0ff';
+  });
+  const overallTime = overall.elapsed + (overall.running ? Date.now() - overall.start : 0);
+  document.getElementById("overallTime").textContent = formatTime(overallTime);
 
-  const update = i => {
-    const t = timers[i];
-    t.el.textContent = format(t.seconds);
-    t.el.style.color = t.seconds > 180 ? "red" : "#0ff";
-  };
-
-  const updateAll = () => timers.forEach((_, i) => update(i));
-
-  const checkWasted = () => {
-    if (timers.some(t => t.seconds > 180)) {
-      if (!wastedInterval) {
-        wastedInterval = setInterval(() => {
-          wastedSeconds++;
-          document.getElementById("wastedTime").textContent = format(wastedSeconds);
-          saveState();
-        }, 1000);
-      }
-    } else {
-      clearInterval(wastedInterval);
-      wastedInterval = null;
-    }
-  };
-
-  function saveState() {
-    const state = {
-      timers: timers.map((t, i) => ({
-        seconds: t.seconds,
-        running: !!t.interval,
-        label: t.label.innerText
-      })),
-      overall: {
-        seconds: overallSeconds,
-        running: !!overallInterval,
-        startTime: document.getElementById("startTimeLabel").textContent
-      },
-      wasted: {
-        seconds: wastedSeconds,
-        running: !!wastedInterval
-      }
-    };
-    localStorage.setItem("workout_state", JSON.stringify(state));
+  const over3 = timers.some(t => ((t.elapsed + (t.running ? Date.now() - t.start : 0)) >= 180000));
+  if (over3) {
+    if (!wasted.running) wasted.start = Date.now();
+    wasted.running = true;
+  } else {
+    if (wasted.running) wasted.elapsed += Date.now() - wasted.start;
+    wasted.running = false;
   }
+  const wastedTime = wasted.elapsed + (wasted.running ? Date.now() - wasted.start : 0);
+  document.getElementById("wastedTime").textContent = formatTime(wastedTime);
 
-  function restoreState() {
-    const state = JSON.parse(localStorage.getItem("workout_state") || "null");
-    if (!state) return;
+  requestAnimationFrame(updateDisplay);
+}
 
-    state.timers.forEach((saved, i) => {
-      timers[i].seconds = saved.seconds;
-      timers[i].label.innerText = saved.label;
-      update(i);
-      if (saved.running) start(i + 1);
-    });
-
-    overallSeconds = state.overall.seconds;
-    document.getElementById("overallTime").textContent = format(overallSeconds);
-    document.getElementById("startTimeLabel").textContent = state.overall.startTime;
-    if (state.overall.running) {
-      overallInterval = setInterval(() => {
-        overallSeconds++;
-        document.getElementById("overallTime").textContent = format(overallSeconds);
-        saveState();
-      }, 1000);
-    }
-
-    wastedSeconds = state.wasted.seconds;
-    document.getElementById("wastedTime").textContent = format(wastedSeconds);
-    if (state.wasted.running) {
-      wastedInterval = setInterval(() => {
-        wastedSeconds++;
-        document.getElementById("wastedTime").textContent = format(wastedSeconds);
-        saveState();
-      }, 1000);
+function start(i) {
+  const t = timers[i-1];
+  if (!t.running) {
+    t.running = true;
+    t.start = Date.now();
+    if (!overall.running) {
+      overall.running = true;
+      overall.start = Date.now();
+      const now = new Date();
+      document.getElementById("startTimeLabel").textContent = `Workout started at ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
     }
   }
+}
 
-  window.start = i => {
-    const idx = i - 1;
-    if (!timers[idx].interval) {
-      timers[idx].interval = setInterval(() => {
-        timers[idx].seconds++;
-        update(idx);
-        checkWasted();
-        saveState();
-      }, 1000);
+function stop(i) {
+  const t = timers[i-1];
+  if (t.running) {
+    t.elapsed += Date.now() - t.start;
+    t.running = false;
+  }
+}
 
-      if (!overallInterval) {
-        const now = new Date();
-        const hrs = now.getHours().toString().padStart(2, '0');
-        const mins = now.getMinutes().toString().padStart(2, '0');
-        document.getElementById("startTimeLabel").textContent = `Workout started at ${hrs}:${mins}`;
-        overallInterval = setInterval(() => {
-          overallSeconds++;
-          document.getElementById("overallTime").textContent = format(overallSeconds);
-          saveState();
-        }, 1000);
-      }
-    }
-  };
+function reset(i) {
+  const t = timers[i-1];
+  t.running = false;
+  t.elapsed = 0;
+  t.start = null;
+}
 
-  window.stop = i => {
-    const idx = i - 1;
-    clearInterval(timers[idx].interval);
-    timers[idx].interval = null;
-    checkWasted();
-    saveState();
-  };
+function startNewSession() {
+  timers.forEach(t => { t.running = false; t.elapsed = 0; t.start = null; });
+  overall.running = false; overall.elapsed = 0; overall.start = null;
+  wasted.running = false; wasted.elapsed = 0; wasted.start = null;
+  document.getElementById("startTimeLabel").textContent = "";
+}
 
-  window.reset = i => {
-    const idx = i - 1;
-    stop(i);
-    timers[idx].seconds = 0;
-    update(idx);
-    checkWasted();
-    saveState();
-  };
-
-  window.startNewSession = () => {
-    localStorage.removeItem("workout_state");
-    location.reload();
-  };
-
-  restoreState();
-};
-</script>
-
-</body>
+updateDisplay();
+</script></body>
 </html>
