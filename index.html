@@ -45,11 +45,11 @@
     <div class="time" id="wastedTime">00:00</div>
   </div>  <div id="controls">
     <button onclick="startNewSession()" style="background:#ff9800;color:white;">Start New Session</button>
-  </div>  <div id="version">v2.0 - Real-time calculation with timestamp recovery</div><script>
+  </div>  <div id="version">v2.1 - Persistent timestamps + real-time recovery</div><script>
 let timers = [
-  { running: false, start: null, elapsed: 0 },
-  { running: false, start: null, elapsed: 0 },
-  { running: false, start: null, elapsed: 0 }
+  { running: false, start: null, elapsed: 0, label: "Exercise A" },
+  { running: false, start: null, elapsed: 0, label: "Exercise B" },
+  { running: false, start: null, elapsed: 0, label: "Exercise C" }
 ];
 let overall = { running: false, start: null, elapsed: 0 };
 let wasted = { running: false, start: null, elapsed: 0 };
@@ -59,13 +59,31 @@ function formatTime(ms) {
   return String(Math.floor(s/60)).padStart(2,'0') + ":" + String(s%60).padStart(2,'0');
 }
 
+function saveState() {
+  localStorage.setItem("stopwatch_v2.1", JSON.stringify({ timers, overall, wasted, startTimeLabel: document.getElementById("startTimeLabel").textContent }));
+}
+
+function loadState() {
+  const data = JSON.parse(localStorage.getItem("stopwatch_v2.1"));
+  if (!data) return;
+  timers = data.timers;
+  overall = data.overall;
+  wasted = data.wasted;
+  document.getElementById("startTimeLabel").textContent = data.startTimeLabel || "";
+  document.getElementById("label1").innerText = timers[0].label;
+  document.getElementById("label2").innerText = timers[1].label;
+  document.getElementById("label3").innerText = timers[2].label;
+}
+
 function updateDisplay() {
   timers.forEach((t, i) => {
     const el = document.getElementById(`time${i+1}`);
     const time = t.elapsed + (t.running ? Date.now() - t.start : 0);
     el.textContent = formatTime(time);
     el.style.color = (time >= 180000) ? 'red' : '#0ff';
+    timers[i].label = document.getElementById(`label${i+1}`).innerText;
   });
+
   const overallTime = overall.elapsed + (overall.running ? Date.now() - overall.start : 0);
   document.getElementById("overallTime").textContent = formatTime(overallTime);
 
@@ -80,6 +98,7 @@ function updateDisplay() {
   const wastedTime = wasted.elapsed + (wasted.running ? Date.now() - wasted.start : 0);
   document.getElementById("wastedTime").textContent = formatTime(wastedTime);
 
+  saveState();
   requestAnimationFrame(updateDisplay);
 }
 
@@ -113,12 +132,17 @@ function reset(i) {
 }
 
 function startNewSession() {
+  localStorage.removeItem("stopwatch_v2.1");
   timers.forEach(t => { t.running = false; t.elapsed = 0; t.start = null; });
   overall.running = false; overall.elapsed = 0; overall.start = null;
   wasted.running = false; wasted.elapsed = 0; wasted.start = null;
   document.getElementById("startTimeLabel").textContent = "";
+  document.getElementById("label1").innerText = "Exercise A";
+  document.getElementById("label2").innerText = "Exercise B";
+  document.getElementById("label3").innerText = "Exercise C";
 }
 
+loadState();
 updateDisplay();
 </script></body>
 </html>
