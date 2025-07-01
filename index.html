@@ -71,7 +71,7 @@
     <img id="motivationalImage" src="" alt="Motivational Image" />
   </div>
 
-  <p style="text-align:center; font-size: 12px; color: gray;">v2.4 – Rotating 3 local images</p>
+  <p style="text-align:center; font-size: 12px; color: gray;">v2.5 – GigaBody image rotation enabled</p>
 
 <script>
   let timers = [
@@ -88,11 +88,11 @@
   }
 
   function saveState() {
-    localStorage.setItem("stopwatch_v2.4", JSON.stringify({ timers, overall, wasted, startTimeLabel: document.getElementById("startTimeLabel").textContent }));
+    localStorage.setItem("stopwatch_v2.5", JSON.stringify({ timers, overall, wasted, startTimeLabel: document.getElementById("startTimeLabel").textContent }));
   }
 
   function loadState() {
-    const data = JSON.parse(localStorage.getItem("stopwatch_v2.4"));
+    const data = JSON.parse(localStorage.getItem("stopwatch_v2.5"));
     if (!data) return;
     timers = data.timers;
     overall = data.overall;
@@ -160,7 +160,7 @@
   }
 
   function startNewSession() {
-    localStorage.removeItem("stopwatch_v2.4");
+    localStorage.removeItem("stopwatch_v2.5");
     timers.forEach(t => { t.running = false; t.elapsed = 0; t.start = null; });
     overall.running = false; overall.elapsed = 0; overall.start = null;
     wasted.running = false; wasted.elapsed = 0; wasted.start = null;
@@ -182,9 +182,10 @@
   }
 
   const motivationalImages = [
-    "images/photo1.jpg",
-    "images/photo2.jpg",
-    "images/comic1.jpg"
+    "images/GigaBody1.png",
+    "images/GigaBody2.png",
+    "images/GigaBody3.png",
+    "images/GigaBody4.png"
   ];
 
   function updateMotivationalImage() {
