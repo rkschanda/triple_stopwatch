@@ -17,6 +17,7 @@
     #startTimeLabel { font-size:18px; color:#aaa; margin-bottom:5px; }
     #version { font-size:12px; color:#888; margin-top:40px; }
     #motivation img { max-width:100%; height:auto; border-radius:10px; box-shadow:0 0 10px #000; margin-top:10px; }
+    #quote { font-style: italic; margin-top: 10px; font-size: 16px; color: #ccc; }
     @media(max-width:768px){body{flex-direction:column;align-items:center;}}
   </style>
 </head>
@@ -68,10 +69,12 @@
 
   <div id="motivation">
     <div class="label">Stay motivated</div>
-    <img id="motivationalImage" src="" alt="Motivational Image" />
+    <img id="motivationalImage" src="images/GigaBody1.png" alt="Motivational Image" />
+    <div id="quote">"You don't have to be extreme, just consistent."</div>
+    <button onclick="updateMotivationalImage()">Shuffle</button>
   </div>
 
-  <p style="text-align:center; font-size: 12px; color: gray;">v2.5 – GigaBody image rotation enabled</p>
+  <p style="text-align:center; font-size: 12px; color: gray;">v2.6 – GigaBody rotation + Shuffle button + Quotes</p>
 
 <script>
   let timers = [
@@ -82,17 +85,31 @@
   let overall = { running: false, start: null, elapsed: 0 };
   let wasted = { running: false, start: null, elapsed: 0 };
 
+  const motivationalImages = [
+    "images/GigaBody1.png",
+    "images/GigaBody2.png",
+    "images/GigaBody3.png",
+    "images/GigaBody4.png"
+  ];
+
+  const motivationalQuotes = [
+    "No excuses. Just results.",
+    "Discipline is choosing between what you want now and what you want most.",
+    "You don't have to be extreme, just consistent.",
+    "Your body won't go where your mind doesn't push it."
+  ];
+
   function formatTime(ms) {
     const s = Math.floor(ms / 1000);
     return String(Math.floor(s/60)).padStart(2,'0') + ":" + String(s%60).padStart(2,'0');
   }
 
   function saveState() {
-    localStorage.setItem("stopwatch_v2.5", JSON.stringify({ timers, overall, wasted, startTimeLabel: document.getElementById("startTimeLabel").textContent }));
+    localStorage.setItem("stopwatch_v2.6", JSON.stringify({ timers, overall, wasted, startTimeLabel: document.getElementById("startTimeLabel").textContent }));
   }
 
   function loadState() {
-    const data = JSON.parse(localStorage.getItem("stopwatch_v2.5"));
+    const data = JSON.parse(localStorage.getItem("stopwatch_v2.6"));
     if (!data) return;
     timers = data.timers;
     overall = data.overall;
@@ -160,7 +177,7 @@
   }
 
   function startNewSession() {
-    localStorage.removeItem("stopwatch_v2.5");
+    localStorage.removeItem("stopwatch_v2.6");
     timers.forEach(t => { t.running = false; t.elapsed = 0; t.start = null; });
     overall.running = false; overall.elapsed = 0; overall.start = null;
     wasted.running = false; wasted.elapsed = 0; wasted.start = null;
@@ -181,16 +198,11 @@
     document.getElementById("countdownTimer").textContent = `${days}d ${hrs}h ${mins}m ${secs}s`;
   }
 
-  const motivationalImages = [
-    "images/GigaBody1.png",
-    "images/GigaBody2.png",
-    "images/GigaBody3.png",
-    "images/GigaBody4.png"
-  ];
-
   function updateMotivationalImage() {
-    const randomIndex = Math.floor(Math.random() * motivationalImages.length);
-    document.getElementById("motivationalImage").src = motivationalImages[randomIndex];
+    const index = Math.floor(Math.random() * motivationalImages.length);
+    const quoteIndex = Math.floor(Math.random() * motivationalQuotes.length);
+    document.getElementById("motivationalImage").src = motivationalImages[index];
+    document.getElementById("quote").textContent = `"${motivationalQuotes[quoteIndex]}"`;
   }
 
   loadState();
