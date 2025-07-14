@@ -27,6 +27,14 @@
   let timers = [...]; // same as before
   let restFlashTriggered = false;
 
+  function flashScreen() {
+    const originalColor = document.body.style.background;
+    document.body.style.background = '#700';
+    setTimeout(() => {
+      document.body.style.background = originalColor || '#111';
+    }, 300);
+  }
+
   function updateDisplay() {
     const now = Date.now();
     timers.forEach(...); // unchanged stopwatch rendering
@@ -40,8 +48,7 @@
 
       if (restElapsed >= 180000 && !restFlashTriggered) {
         document.getElementById("alertSound").play();
-        document.body.style.background = '#700';
-        setTimeout(() => document.body.style.background = '#111', 200);
+        flashScreen();
         restFlashTriggered = true;
       }
 
