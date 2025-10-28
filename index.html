@@ -1,232 +1,401 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Triple Stopwatch</title>
-  <style>
-    body { background:#111;color:#fff;font-family:Arial; display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:20px; transition: background 0.3s ease; }
-    .stopwatch { background:#222;border-radius:10px;padding:20px;width:250px;text-align:center;box-shadow:0 0 10px #000; }
-    .title { font-size:24px;margin-bottom:10px;cursor:text; }
-    .time { font-size:48px;margin:20px 0;color:#0ff; }
-    button {margin:5px;padding:10px 20px;font-size:16px;border:none;border-radius:5px;cursor:pointer;}
-    .start{background:#4caf50;color:#fff;} .stop{background:#f44336;color:#fff;} .reset{background:#555;color:#fff;}
-    #overall, #rest, #wasted, #controls, #version, #countdown, #motivation {width:100%;text-align:center;margin-top:20px;}
-    #overall .label, #rest .label, #wasted .label, #countdown .label {font-size:20px;}
-    #overall .time, #rest .time, #wasted .time, #countdown .time {font-size:36px;}
-    #startTimeLabel { font-size:18px; color:#aaa; margin-bottom:5px; }
-    #version { font-size:12px; color: #888; margin-top:40px; }
-    #motivation img { max-width:100%; height:auto; border-radius:10px; box-shadow:0 0 10px #000; margin-top:10px; }
-    #quote { font-style: italic; margin-top: 10px; font-size: 16px; color: #ccc; }
-    @media(max-width:768px){body{flex-direction:column;align-items:center;}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triple Stopwatch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+            padding: 15px;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .workout-info {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .info-value {
+            font-size: 24px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .wasted-time {
+            color: #FF6B6B;
+        }
+
+        .wasted-time.warning {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .exercises {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .exercise {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .exercise.running {
+            border-color: #4ECDC4;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .exercise-info {
+            flex: 1;
+        }
+
+        .exercise-name {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid transparent;
+            margin-bottom: 8px;
+        }
+
+        .exercise-name:focus {
+            outline: none;
+            border-color: #4ECDC4;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .exercise-time {
+            font-size: 32px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #4ECDC4;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            border: none;
+            border-radius: 12px;
+            padding: 15px 25px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .reset-btn:active {
+            transform: scale(0.95);
+        }
+
+        .reset-all-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .reset-all-btn:active {
+            transform: scale(0.98);
+        }
+
+        @media (max-width: 480px) {
+            .exercise-time {
+                font-size: 28px;
+            }
+            
+            .reset-btn {
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
 </head>
-<body><audio id="alertSound">
-  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
-  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.mp3" type="audio/mpeg">
-</audio><div class="stopwatch" id="sw1">
-  <div class="title" contenteditable="true" id="label1">Exercise A</div>
-  <div class="time" id="time1">00:00</div>
-  <button class="start" onclick="start(1)">Start</button>
-  <button class="stop" onclick="stop(1)">Stop</button>
-  <button class="reset" onclick="reset(1)">Reset</button>
-</div><div class="stopwatch" id="sw2">
-  <div class="title" contenteditable="true" id="label2">Exercise B</div>
-  <div class="time" id="time2">00:00</div>
-  <button class="start" onclick="start(2)">Start</button>
-  <button class="stop" onclick="stop(2)">Stop</button>
-  <button class="reset" onclick="reset(2)">Reset</button>
-</div><div class="stopwatch" id="sw3">
-  <div class="title" contenteditable="true" id="label3">Exercise C</div>
-  <div class="time" id="time3">00:00</div>
-  <button class="start" onclick="start(3)">Start</button>
-  <button class="stop" onclick="stop(3)">Stop</button>
-  <button class="reset" onclick="reset(3)">Reset</button>
-</div><div id="overall">
-  <div class="label" id="startTimeLabel"></div>
-  <div class="label">Overall Workout Time</div>
-  <div class="time" id="overallTime">00:00</div>
-</div><div id="rest">
-  <div class="label">Time Since Last Reset</div>
-  <div class="time" id="restTime">00:00</div>
-</div><div id="wasted">
-  <div class="label">Wasted Time</div>
-  <div class="time" id="wastedTime">00:00</div>
-</div><div id="controls">
-  <button onclick="startNewSession()" style="background:#ff9800;color:white;">Start New Session</button>
-</div><div id="countdown">
-  <div class="label">Countdown to July 19</div>
-  <div class="time" id="countdownTimer">Loading…</div>
-</div><div id="motivation">
-  <div class="label">Stay motivated</div>
-  <img id="motivationalImage" src="images/GigaBody1.png" alt="Motivational Image" />
-  <div id="quote">"You don't have to be extreme, just consistent."</div>
-  <button onclick="updateMotivationalImage()">Shuffle</button>
-</div><p style="text-align:center; font-size: 12px; color: gray;">v2.9 – Flash and sound fixed</p><script>
-let timers = [
-  { running: false, start: null, elapsed: 0, label: "Exercise A" },
-  { running: false, start: null, elapsed: 0, label: "Exercise B" },
-  { running: false, start: null, elapsed: 0, label: "Exercise C" }
-];
-let overall = { running: false, start: null, elapsed: 0 };
-let wasted = { running: false, start: null, elapsed: 0 };
-let lastResetTime = null;
-let workoutStarted = false;
-let restFlashTriggered = false;
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏋️ Gym Timer</h1>
+        </div>
 
-const motivationalImages = [
-  "images/GigaBody1.png",
-  "images/GigaBody2.png",
-  "images/GigaBody3.png",
-  "images/GigaBody4.png"
-];
-const motivationalQuotes = [
-  "No excuses. Just results.",
-  "Discipline is choosing between what you want now and what you want most.",
-  "You don't have to be extreme, just consistent.",
-  "Your body won't go where your mind doesn't push it."
-];
+        <div class="workout-info">
+            <div class="info-row">
+                <span class="info-label">Workout Duration</span>
+                <span class="info-value" id="workoutDuration">00:00:00</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Wasted Time</span>
+                <span class="info-value wasted-time" id="wastedTime">00:00</span>
+            </div>
+        </div>
 
-function formatTime(ms) {
-  const s = Math.floor(ms / 1000);
-  return String(Math.floor(s / 60)).padStart(2, '0') + ":" + String(s % 60).padStart(2, '0');
-}
+        <div class="exercises" id="exercises">
+            <!-- Exercises will be generated here -->
+        </div>
 
-function flashScreen() {
-  const original = document.body.style.background;
-  document.body.style.background = '#700';
-  setTimeout(() => document.body.style.background = original || '#111', 300);
-}
+        <button class="reset-all-btn" id="resetAllBtn">Reset All</button>
+    </div>
 
-function updateDisplay() {
-  const now = Date.now();
-  timers.forEach((t, i) => {
-    const el = document.getElementById(`time${i + 1}`);
-    const time = t.elapsed + (t.running ? now - t.start : 0);
-    el.textContent = formatTime(time);
-    el.style.color = (time >= 180000) ? 'red' : '#0ff';
-    timers[i].label = document.getElementById(`label${i + 1}`).innerText;
-  });
+    <script>
+        class GymTimer {
+            constructor() {
+                this.exercises = [
+                    { id: 0, name: 'Exercise 1', time: 0, running: false, startTime: null },
+                    { id: 1, name: 'Exercise 2', time: 0, running: false, startTime: null },
+                    { id: 2, name: 'Exercise 3', time: 0, running: false, startTime: null }
+                ];
+                this.workoutStartTime = null;
+                this.lastResetTime = null;
+                this.wastedTime = 0;
+                this.displayWastedTime = 0;
+                
+                this.initializeUI();
+                
+                this.initializeUI();
+                this.startTimer();
+            }
 
-  const overallTime = overall.elapsed + (overall.running ? now - overall.start : 0);
-  document.getElementById("overallTime").textContent = formatTime(overallTime);
+            initializeUI() {
+                this.renderExercises();
+                this.setupResetAll();
+            }
 
-  const restDisplay = document.getElementById("restTime");
-  if (workoutStarted && lastResetTime !== null) {
-    const restElapsed = now - lastResetTime;
-    restDisplay.textContent = formatTime(restElapsed);
-    restDisplay.style.color = restElapsed >= 180000 ? 'red' : '#0ff';
+            renderExercises() {
+                const container = document.getElementById('exercises');
+                container.innerHTML = '';
+                
+                this.exercises.forEach(exercise => {
+                    const element = document.createElement('div');
+                    element.className = `exercise ${exercise.running ? 'running' : ''}`;
+                    element.innerHTML = `
+                        <div class="exercise-info">
+                            <input type="text" class="exercise-name" value="${exercise.name}" data-id="${exercise.id}">
+                            <div class="exercise-time">${this.formatTime(exercise.time)}</div>
+                        </div>
+                        <button class="reset-btn" data-id="${exercise.id}">Reset</button>
+                    `;
+                    container.appendChild(element);
+                });
+                
+                // Setup event listeners
+                container.addEventListener('click', (e) => {
+                    if (e.target.matches('.reset-btn')) {
+                        const id = parseInt(e.target.dataset.id);
+                        this.resetExercise(id);
+                    }
+                });
+                
+                container.addEventListener('input', (e) => {
+                    if (e.target.matches('.exercise-name')) {
+                        const id = parseInt(e.target.dataset.id);
+                        this.exercises[id].name = e.target.value;
+                    }
+                });
+            }
 
-    if (restElapsed >= 180000 && !restFlashTriggered) {
-      document.getElementById("alertSound").play();
-      flashScreen();
-      restFlashTriggered = true;
-    }
-    if (restElapsed < 180000) restFlashTriggered = false;
+            resetExercise(id) {
+                const now = Date.now();
+                const exercise = this.exercises[id];
+                
+                // Start workout timer on first reset
+                if (!this.workoutStartTime) {
+                    this.workoutStartTime = now;
+                }
+                
+                // Calculate and accumulate wasted time before resetting
+                if (this.lastResetTime) {
+                    const timeSinceReset = Math.floor((now - this.lastResetTime) / 1000);
+                    if (timeSinceReset > 180) {
+                        this.wastedTime += (timeSinceReset - 180);
+                    }
+                }
+                
+                // Reset this specific exercise timer
+                exercise.time = 0;
+                exercise.running = true;
+                exercise.startTime = now;
+                
+                // Update last reset time (for wasted time tracking)
+                this.lastResetTime = now;
+                
+                // Update UI for this exercise
+                this.updateExerciseUI(id);
+            }
 
-    if (restElapsed >= 240000) {
-      if (!wasted.running) wasted.start = now;
-      wasted.running = true;
-    } else {
-      if (wasted.running) wasted.elapsed += now - wasted.start;
-      wasted.running = false;
-    }
-  } else {
-    restDisplay.textContent = "00:00";
-    restDisplay.style.color = '#0ff';
-  }
+            setupResetAll() {
+                document.getElementById('resetAllBtn').addEventListener('click', () => {
+                    if (confirm('Reset entire workout?')) {
+                        this.exercises.forEach(ex => {
+                            ex.time = 0;
+                            ex.running = false;
+                            ex.startTime = null;
+                        });
+                        this.workoutStartTime = null;
+                        this.lastResetTime = null;
+                        this.wastedTime = 0;
+                        this.renderExercises();
+                        this.updateDisplay();
+                    }
+                });
+            }
 
-  const wastedTime = wasted.elapsed + (wasted.running ? now - wasted.start : 0);
-  document.getElementById("wastedTime").textContent = formatTime(wastedTime);
+            updateExerciseUI(id) {
+                const exercise = this.exercises[id];
+                const element = document.getElementById('exercises').children[id];
+                element.className = `exercise ${exercise.running ? 'running' : ''}`;
+            }
 
-  saveState();
-  requestAnimationFrame(updateDisplay);
-}
+            startTimer() {
+                setInterval(() => {
+                    this.updateTimes();
+                    this.updateDisplay();
+                }, 100);
+            }
 
-function start(i) {
-  const t = timers[i - 1];
-  if (!t.running) {
-    t.running = true;
-    t.start = Date.now();
-    if (!overall.running) {
-      overall.running = true;
-      overall.start = Date.now();
-      workoutStarted = true;
-      lastResetTime = Date.now();
-      const now = new Date();
-      document.getElementById("startTimeLabel").textContent = `Workout started at ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-    }
-  }
-}
+            updateTimes() {
+                const now = Date.now();
+                
+                // Update running exercise timers
+                this.exercises.forEach(exercise => {
+                    if (exercise.running && exercise.startTime) {
+                        exercise.time = Math.floor((now - exercise.startTime) / 1000);
+                    }
+                });
+                
+                // Display current rest period if over 3 min (but don't add to total yet)
+                if (this.lastResetTime) {
+                    const timeSinceReset = Math.floor((now - this.lastResetTime) / 1000);
+                    if (timeSinceReset > 180) {
+                        const currentWaste = timeSinceReset - 180;
+                        // Show accumulated + current waste
+                        this.displayWastedTime = this.wastedTime + currentWaste;
+                    } else {
+                        this.displayWastedTime = this.wastedTime;
+                    }
+                } else {
+                    this.displayWastedTime = this.wastedTime;
+                }
+            }
 
-function stop(i) {
-  const t = timers[i - 1];
-  if (t.running) {
-    t.elapsed += Date.now() - t.start;
-    t.running = false;
-  }
-}
+            updateDisplay() {
+                // Update exercise time displays
+                this.exercises.forEach((exercise, index) => {
+                    const element = document.getElementById('exercises').children[index];
+                    const timeDisplay = element.querySelector('.exercise-time');
+                    timeDisplay.textContent = this.formatTime(exercise.time);
+                });
+                
+                // Update workout duration
+                let workoutDuration = 0;
+                if (this.workoutStartTime) {
+                    workoutDuration = Math.floor((Date.now() - this.workoutStartTime) / 1000);
+                }
+                document.getElementById('workoutDuration').textContent = this.formatTimeWithHours(workoutDuration);
+                
+                // Update wasted time
+                const wastedTimeEl = document.getElementById('wastedTime');
+                wastedTimeEl.textContent = this.formatTime(this.displayWastedTime || 0);
+                wastedTimeEl.classList.toggle('warning', (this.displayWastedTime || 0) > 0);
+            }
 
-function reset(i) {
-  const t = timers[i - 1];
-  t.running = false;
-  t.elapsed = 0;
-  t.start = null;
-  if (workoutStarted) lastResetTime = Date.now();
-}
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
 
-function startNewSession() {
-  localStorage.removeItem("stopwatch_v2.9");
-  timers.forEach(t => { t.running = false; t.elapsed = 0; t.start = null; });
-  overall.running = false; overall.elapsed = 0; overall.start = null;
-  wasted.running = false; wasted.elapsed = 0; wasted.start = null;
-  lastResetTime = null;
-  workoutStarted = false;
-  document.getElementById("startTimeLabel").textContent = "";
-  document.getElementById("label1").innerText = "Exercise A";
-  document.getElementById("label2").innerText = "Exercise B";
-  document.getElementById("label3").innerText = "Exercise C";
-}
+            formatTimeWithHours(seconds) {
+                const hours = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+                return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
 
-function updateCountdown() {
-  const target = new Date("July 19, 2025 00:00:00").getTime();
-  const now = new Date().getTime();
-  const diff = target - now;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hrs = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const secs = Math.floor((diff % (1000 * 60)) / 1000);
-  document.getElementById("countdownTimer").textContent = `${days}d ${hrs}h ${mins}m ${secs}s`;
-}
+        // Initialize the app
+        let app;
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new GymTimer();
+        });
 
-function updateMotivationalImage() {
-  const index = Math.floor(Math.random() * motivationalImages.length);
-  const quoteIndex = Math.floor(Math.random() * motivationalQuotes.length);
-  document.getElementById("motivationalImage").src = motivationalImages[index];
-  document.getElementById("quote").textContent = `"${motivationalQuotes[quoteIndex]}"`;
-}
-
-function saveState() {
-  localStorage.setItem("stopwatch_v2.9", JSON.stringify({ timers, overall, wasted, lastResetTime, workoutStarted, startTimeLabel: document.getElementById("startTimeLabel").textContent }));
-}
-
-function loadState() {
-  const data = JSON.parse(localStorage.getItem("stopwatch_v2.9"));
-  if (!data) return;
-  timers = data.timers;
-  overall = data.overall;
-  wasted = data.wasted;
-  lastResetTime = data.lastResetTime || null;
-  workoutStarted = data.workoutStarted || false;
-  document.getElementById("startTimeLabel").textContent = data.startTimeLabel || "";
-  document.getElementById("label1").innerText = timers[0].label;
-  document.getElementById("label2").innerText = timers[1].label;
-  document.getElementById("label3").innerText = timers[2].label;
-}
-
-loadState();
-updateDisplay();
-setInterval(updateCountdown, 1000);
-updateMotivationalImage();
-setInterval(updateMotivationalImage, 300000);
-</script></body>
+        // Prevent zoom on double tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
 </html>
